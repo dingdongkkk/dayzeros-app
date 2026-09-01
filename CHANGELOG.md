@@ -27,6 +27,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Separated public landing page (`/`) from authenticated focus workspace (`/app`).
 - Updated workspace build and dev scripts to support Bun and npm concurrently.
 
+### Fixed
+- **Inaudible Ambience**: All three sound layers were filtered from a single brown-noise buffer, so rain (highpass 900Hz) and crickets (bandpass 4200Hz) discarded nearly all their source energy and rendered at roughly -42 dBFS and -49 dBFS. Rain and wind are now synthesized from sources appropriate to their spectrum, raising rain by about 20 dB to a usable level.
+- **Crickets Sounded Like a Drone**: An 11Hz LFO wrote ±0.55 directly onto the cricket gain, swamping and inverting a signal whose target was around 0.03. Replaced with a scheduler that emits discrete chirp trills.
+- **Stop Button Did Not Stop**: Pausing ambience faded over a 0.25s time constant and left up to a second of cricket chirps already queued, so audio remained audible for roughly a second after the click. Stopping now ramps out over 80ms, cancels pending chirps, and suspends the audio context, reaching silence within ~200ms.
+- **Sliders Overrode An Explicit Stop**: Moving a volume slider after pressing stop restarted playback. Sliders now only start ambience on the first interaction.
+
 ### Removed
 - Deprecated legacy `index.html`, `build.py`, and root asset placeholders.
 - Unreachable `AuthModal` instance in `SpaceView` (sign-in remains available from `LandingNavbar` and the `AppNavbar` profile menu).
