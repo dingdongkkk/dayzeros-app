@@ -1,3 +1,10 @@
 .DS_Store
 __pycache__/
 *.pyc
+node_modules/
+.next/
+out/
+dist/
+.env
+.env*.local
+next-env.d.ts
