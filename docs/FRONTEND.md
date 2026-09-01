@@ -12,11 +12,12 @@ The frontend is a **Next.js 15 App Router** application built with React 19, Typ
    - Scrim text shadows ensuring legibility on backdrop art.
 
 2. **WebAudio Ambient Sound Generator (`useAudioAmbience.ts`)**:
-   - Generates procedural pink/brown noise buffers live in the browser.
-   - **Rain**: Highpass biquad filter (900Hz).
-   - **Wind**: Lowpass biquad filter (380Hz).
-   - **Crickets**: Bandpass biquad filter (4200Hz, Q 14) modulated by an 11Hz Low-Frequency Oscillator (LFO) gain node.
-   - Volume sliders control gains smoothly using `AudioParam.setTargetAtTime`.
+   - Generates white and brown noise buffers live in the browser; each layer is shaped from the source that suits it.
+   - **Rain**: White noise split into a hiss band (highpass 700Hz → lowpass 6500Hz) over a low body (lowpass 500Hz), with a slow LFO so intensity breathes.
+   - **Wind**: Brown noise through a lowpass whose cutoff is driven by two incommensurate LFOs (0.05Hz and 0.13Hz), producing gusts that never loop audibly.
+   - **Crickets**: A look-ahead scheduler queues chirp trills — bursts of 3–5 short sine pulses near 4.3–4.8kHz with a 3ms attack and 19ms decay — separated by randomized rests, rather than a continuous tremolo.
+   - All layers meet at a master bus with a `DynamicsCompressor` limiter so stacked layers cannot clip.
+   - Volume sliders ramp gains with `AudioParam.setTargetAtTime`; stopping uses a short 80ms linear ramp, cancels chirps already queued ahead of the clock, and suspends the `AudioContext` so playback halts within ~200ms.
 
 3. **Pomodoro Timer Engine (`usePomodoro.ts`)**:
    - 25-minute focus / 5-minute break Pomodoro cycles.
