@@ -1,54 +1,99 @@
-# Dayzeros
+# Dayzeros (Monorepo)
 
-A calm focus app that lives on a single pixel-art meadow. One page to settle into,
-one page to work in — a Pomodoro timer, a short task list, and synthesized ambience,
-all sitting directly on the artwork with no chrome in the way.
+A calm focus app and cloud platform living on a single pixel-art meadow.
+Built as a modern full-stack monorepo featuring **Next.js 15 (App Router)** on the frontend and **Fastify + Better Auth + Drizzle ORM + postgres.js + NeonDB** on the backend.
 
-![Dayzeros](assets/meadow.webp)
+![Dayzeros](frontend/public/assets/meadow.webp)
 
-## The two screens
+---
 
-**Space** — the landing. Date and scene stamp, a live wall clock, streak and
-daily-focus pills, and a serif hero, over a pill dock that drops you straight into work.
+## Documentation
 
-**Focus** — the workspace. A large serif countdown, the session caption, transport
-controls, your task list, an ambience mixer, and the day's stats.
+- **[System Architecture](docs/ARCHITECTURE.md)**: Monorepo layout, data flow, and components.
+- **[Authentication Guide](docs/AUTHENTICATION.md)**: Better Auth configuration, session handling, and route protection.
+- **[Database & Schema](docs/DATABASE.md)**: NeonDB setup, Drizzle ORM models, and migration scripts.
+- **[REST API Reference](docs/API.md)**: Complete specification for Fastify endpoints (`/api/tasks`, `/api/stats`, `/api/auth`).
+- **[Frontend Guide](docs/FRONTEND.md)**: Next.js 15, Tailwind CSS v4, WebAudio ambience synthesizer, and Pomodoro engine.
+- **[Agent Guidelines](AGENTS.md)**: Operating rules, scope boundaries, and Conventional Commits standard for AI assistants.
+- **[Changelog](CHANGELOG.md)**: Version history and release notes.
 
-## What it actually does
+---
 
-- **Timer** — 25/5 Pomodoro that runs, pauses, resets, rolls into breaks on its own,
-  advances the session counter, and banks focus minutes.
-- **Tasks** — add, complete, delete. The first open task drives the `now` marker *and*
-  the session caption on both screens, so checking one off re-labels the session.
-- **Ambience** — rain, crickets and wind are generated live with the Web Audio API
-  (filtered noise; crickets are LFO-gated bandpass chirps). The sliders are a real mixer.
-- **Scenes** — cycles the meadow through dusk, night and dawn.
-- **Stats** — focus minutes today and a day streak, computed from stored history.
-- **Keyboard** — `space` start/pause, `R` reset, `S` scenes, `Esc` switch screens.
-
-State lives in `localStorage`. A first visit seeds sample tasks and history so the
-app looks like the design instead of an empty shell.
-
-## Layout
+## Monorepo Structure
 
 ```
-index.html          the built, self-contained page — open it directly, no server needed
-src/template.html   the source; identical but with a __MEADOW__ placeholder for the image
-build.py            inlines assets/meadow.webp into the template to produce index.html
-assets/             the background art
+dayzeros-monorepo/
+├── backend/                   # Fastify API Server
+│   ├── src/
+│   │   ├── auth.ts            # Better Auth server configuration with Drizzle adapter
+│   │   ├── db/
+│   │   │   ├── index.ts       # postgres.js connection pool for NeonDB
+│   │   │   └── schema.ts      # Drizzle schema (users, sessions, tasks, focus_logs, settings)
+│   │   ├── routes/
+│   │   │   ├── tasks.ts       # Authenticated task CRUD endpoints
+│   │   │   └── stats.ts       # Authenticated focus session banking & streak endpoints
+│   │   └── index.ts           # Fastify bootstrap with CORS & Better Auth handler
+│   └── drizzle.config.ts      # Drizzle Kit migration config
+│
+└── frontend/                  # Next.js 15 Web Application
+    ├── src/
+    │   ├── app/               # Landing (/), App (/app), Login (/login), Signup (/signup)
+    │   ├── components/        # AuthModal, SpaceView, FocusView, TasksCard, SoundsCard
+    │   ├── context/           # DayzerosContext with cloud sync
+    │   └── lib/
+    │       ├── auth-client.ts # Better Auth React client
+    │       └── api.ts         # Fastify API client
+    └── public/assets/         # Meadow pixel-art artwork
 ```
 
-`index.html` is committed because the page is meant to be opened or hosted as one
-file. After editing `src/template.html`, regenerate it:
+---
+
+## Quick Start
+
+### 1. Configure Environment
+
+Copy `.env.example` to `.env`:
 
 ```bash
-python3 build.py
+cp .env.example .env
 ```
 
-## Design
+Fill in your **NeonDB** database connection string:
+```env
+DATABASE_URL="postgresql://neondb_owner:password@ep-sample.us-east-2.aws.neon.tech/neondb?sslmode=require"
+BETTER_AUTH_SECRET="a_secure_random_32_character_secret_key_here"
+BETTER_AUTH_URL="http://localhost:4000"
+FRONTEND_URL="http://localhost:3000"
+NEXT_PUBLIC_API_URL="http://localhost:4000"
+```
 
-Built from a supplied design comp. Type is **Playfair Display** for display serif
-(with old-style figures, so the countdown's `9` descends), **Space Mono** for every
-label, pill and task line, and **Space Grotesk** for navigation. The background is
-a dithered pixel-art meadow, kept at its native 3072×1536 so the dither grain stays
-crisp; `assets/meadow-original.png` is the untouched source.
+### 2. Push Schema to NeonDB
+
+Push the Drizzle ORM schema to your NeonDB database:
+
+```bash
+bun run db:push
+```
+
+### 3. Run Development Servers
+
+Run both backend (`http://localhost:4000`) and frontend (`http://localhost:3000`):
+
+```bash
+bun run dev:backend
+bun run dev:frontend
+```
+
+Or run everything concurrently:
+
+```bash
+bun run dev
+```
+
+### 4. Production Build
+
+To build both workspaces:
+
+```bash
+bun run build
+```
