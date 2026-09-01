@@ -35,8 +35,8 @@ The frontend is a **Next.js 15 App Router** application built with React 19, Typ
 | Route | Accessibility | Purpose |
 |---|---|---|
 | `/` | Public | Visitor landing page showcasing the calm meadow, live clock, and sign-up CTAs |
-| `/app` | Protected | Authenticated focus workspace with Pomodoro clock, tasks, sounds, and stats |
-| `/focus`, `/planner` | Protected | Workspace aliases |
+| `/app` | Public | Focus workspace with Pomodoro clock, tasks, sounds, and stats. Signing in is optional and adds cloud sync |
+| `/focus`, `/planner` | Public | Workspace aliases |
 | `/login` | Public | Dedicated sign-in page |
 | `/signup` | Public | Dedicated account creation page |
 

@@ -5,10 +5,12 @@ import Link from 'next/link';
 import { useDayzeros } from '@/context/DayzerosContext';
 import { signOut } from '@/lib/auth-client';
 import { useRouter } from 'next/navigation';
+import { AuthModal } from '@/components/AuthModal';
 
 export function AppNavbar() {
-  const { userName, userEmail, cycleScene, triggerCardAction } = useDayzeros();
+  const { userName, userEmail, isAuthenticated, cycleScene, triggerCardAction } = useDayzeros();
   const [profileOpen, setProfileOpen] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const avatarLetter = userName ? userName[0].toUpperCase() : 'A';
@@ -92,7 +94,7 @@ export function AppNavbar() {
         <button
           type="button"
           onClick={() => setProfileOpen((o) => !o)}
-          title={`Signed in as ${userName}`}
+          title={isAuthenticated ? `Signed in as ${userName}` : 'Working locally — sign in to sync'}
           className="w-[34px] h-[34px] rounded-full bg-[var(--ink)] text-[var(--cream)] font-sans text-[14px] grid place-items-center shrink-0 cursor-pointer border-none hover:scale-105 transition-transform"
         >
           {avatarLetter}
@@ -103,29 +105,55 @@ export function AppNavbar() {
           <div className="absolute right-0 top-12 w-56 bg-[var(--cream)] text-[var(--ink)] rounded-2xl p-3 shadow-2xl border border-[#cdc6b8] z-50 animate-fade-in">
             <div className="px-3 py-2 border-b border-[#e2dccf] mb-2">
               <div className="font-mono font-bold text-xs text-[var(--ink)] truncate">
-                {userName}
+                {isAuthenticated ? userName : 'Working locally'}
               </div>
-              {userEmail && (
+              {isAuthenticated && userEmail && (
                 <div className="font-mono text-[11px] text-[var(--muted)] truncate">
                   {userEmail}
                 </div>
               )}
-              <div className="font-mono text-[10px] text-green-700 mt-1 flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-green-500 block animate-pulse" />
-                NeonDB Cloud Synced
-              </div>
+              {isAuthenticated ? (
+                <div className="font-mono text-[10px] text-green-700 mt-1 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-500 block animate-pulse" />
+                  NeonDB Cloud Synced
+                </div>
+              ) : (
+                <div className="font-mono text-[10px] text-[var(--muted)] mt-1 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--muted)] block" />
+                  Saved on this device only
+                </div>
+              )}
             </div>
 
-            <button
-              type="button"
-              onClick={handleSignOut}
-              className="w-full text-left font-mono text-xs text-red-600 hover:bg-red-50 py-2 px-3 rounded-xl transition-colors cursor-pointer border-none bg-transparent"
-            >
-              Sign Out
-            </button>
+            {isAuthenticated ? (
+              <button
+                type="button"
+                onClick={handleSignOut}
+                className="w-full text-left font-mono text-xs text-red-600 hover:bg-red-50 py-2 px-3 rounded-xl transition-colors cursor-pointer border-none bg-transparent"
+              >
+                Sign Out
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  setProfileOpen(false);
+                  setAuthModalOpen(true);
+                }}
+                className="w-full text-left font-mono text-xs text-[var(--ink)] hover:bg-[rgba(27,26,23,0.06)] py-2 px-3 rounded-xl transition-colors cursor-pointer border-none bg-transparent"
+              >
+                Sign In to Sync →
+              </button>
+            )}
           </div>
         )}
       </div>
+
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        defaultMode="signin"
+      />
     </nav>
   );
 }

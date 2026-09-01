@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Scene, Task } from '@/types';
 import { useSession } from '@/lib/auth-client';
-import { AuthModal } from '@/components/AuthModal';
 
 const SCENE_NAMES: Record<Scene, string> = {
   dusk: 'MEADOW AT DUSK',
@@ -34,8 +33,6 @@ export function SpaceView({
   const { data: authSession } = useSession();
   const [stampText, setStampText] = useState('');
   const [wallClock, setWallClock] = useState({ time: '6:42', ampm: 'pm' });
-  const [authModalOpen, setAuthModalOpen] = useState(false);
-  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signup');
 
   const isAuthenticated = !!authSession?.user;
 
@@ -118,27 +115,13 @@ export function SpaceView({
 
         {/* Landing CTA Dock */}
         <div className="absolute left-1/2 bottom-[44px] -translate-x-1/2 flex gap-3 items-center max-[1080px]:static max-[1080px]:transform-none max-[1080px]:flex-wrap max-[1080px]:mt-6 z-20 pointer-events-auto">
-          {isAuthenticated ? (
-            <Link
-              href="/app"
-              className="font-mono text-[13px] font-bold tracking-[0.5px] inline-flex items-center gap-[10px] bg-[var(--cream)] text-[var(--ink)] border-none rounded-full py-[12px] px-[24px] cursor-pointer shadow-[0_18px_40px_-18px_rgba(8,10,26,0.6)] whitespace-nowrap hover:-translate-y-0.5 hover:shadow-xl transition-all no-underline"
-            >
-              <span aria-hidden="true">▶</span>
-              <span>Open Workspace ({formattedTime})</span>
-            </Link>
-          ) : (
-            <button
-              type="button"
-              onClick={() => {
-                setAuthMode('signup');
-                setAuthModalOpen(true);
-              }}
-              className="font-mono text-[13px] font-bold tracking-[0.5px] inline-flex items-center gap-[10px] bg-[var(--cream)] text-[var(--ink)] border-none rounded-full py-[12px] px-[24px] cursor-pointer shadow-[0_18px_40px_-18px_rgba(8,10,26,0.6)] whitespace-nowrap hover:-translate-y-0.5 hover:shadow-xl transition-all"
-            >
-              <span aria-hidden="true">✦</span>
-              <span>Create Account to Focus</span>
-            </button>
-          )}
+          <Link
+            href="/app"
+            className="font-mono text-[13px] font-bold tracking-[0.5px] inline-flex items-center gap-[10px] bg-[var(--cream)] text-[var(--ink)] border-none rounded-full py-[12px] px-[24px] cursor-pointer shadow-[0_18px_40px_-18px_rgba(8,10,26,0.6)] whitespace-nowrap hover:-translate-y-0.5 hover:shadow-xl transition-all no-underline"
+          >
+            <span aria-hidden="true">▶</span>
+            <span>{isAuthenticated ? 'Open Workspace' : 'Start Focusing'} ({formattedTime})</span>
+          </Link>
 
           <Link
             href="/app?open=tasks"
@@ -163,12 +146,6 @@ export function SpaceView({
           </button>
         </div>
       </section>
-
-      <AuthModal
-        isOpen={authModalOpen}
-        onClose={() => setAuthModalOpen(false)}
-        defaultMode={authMode}
-      />
     </>
   );
 }

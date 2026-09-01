@@ -92,6 +92,7 @@ await signOut();
 
 ---
 
-## Route Protection & Guards
-- The focus workspace (`/app`, `/focus`, `/planner`) is strictly protected.
-- If an unauthenticated user attempts to access these routes, `AppWorkspace.tsx` triggers the `AuthModal` dialog and prevents unauthenticated data manipulation.
+## Route Access
+- No route is gated. The focus workspace (`/app`, `/focus`, `/planner`) renders for every visitor, signed in or not.
+- Authentication is an optional upgrade: a session enables cloud sync of tasks and stats via the backend. Without one, `DayzerosContext` swallows API failures and the workspace runs standalone.
+- Signed-out visitors can start sign-in from the `AppNavbar` profile menu ("Sign In to Sync") or the `LandingNavbar`.
