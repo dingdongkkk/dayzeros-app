@@ -65,13 +65,12 @@ export function AppNavbar() {
         >
           Sounds
         </button>
-        <button
-          type="button"
-          onClick={() => triggerCardAction('stats')}
-          className="font-sans text-[15px] max-[1080px]:text-[14px] font-normal bg-transparent hover:bg-[rgba(27,26,23,0.07)] text-[var(--ink-soft)] cursor-pointer py-[9px] px-[17px] max-[1080px]:py-2 max-[1080px]:px-3 rounded-full whitespace-nowrap shrink-0 transition-colors"
+        <Link
+          href="/stats"
+          className="font-sans text-[15px] max-[1080px]:text-[14px] font-normal bg-transparent hover:bg-[rgba(27,26,23,0.07)] text-[var(--ink-soft)] cursor-pointer py-[9px] px-[17px] max-[1080px]:py-2 max-[1080px]:px-3 rounded-full whitespace-nowrap shrink-0 transition-colors no-underline"
         >
           Stats
-        </button>
+        </Link>
         <button
           type="button"
           onClick={cycleScene}

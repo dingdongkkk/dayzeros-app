@@ -6,6 +6,16 @@ The frontend is a **Next.js 15 App Router** application built with React 19, Typ
 
 ## Key Features
 
+0. **Focus History (`HistoryPanel.tsx`, `/stats`)**:
+   - A 53-week heatmap (Monday-first columns) with five intensity steps climbing toward the brand rust, plus a month calendar showing per-day minutes.
+   - Totals derived from the same day log: lifetime focus, current streak, longest streak, and best day.
+   - Clicking any heatmap cell jumps the calendar to that month and selects the day.
+
+0b. **Fireflies (`Fireflies.tsx`)**:
+   - One firefly per focus session banked in the trailing seven days, capped at 28, drifting over the landing page.
+   - The scene fills with light as you work and empties as a streak lapses — a streak meter that is part of the artwork.
+   - Renders at ~15fps on a canvas and honours `prefers-reduced-motion` by holding the swarm still.
+
 1. **Pixel-Art Aesthetic & Ambient Meadow**:
    - High-resolution dithered pixel-art meadow kept at crisp 1:1 pixel rendering (`image-rendering: pixelated`).
    - Dynamic soft-light color grading layers driven by active scene (`dusk`, `night`, `dawn`).
@@ -38,6 +48,7 @@ The frontend is a **Next.js 15 App Router** application built with React 19, Typ
 | `/` | Public | Visitor landing page showcasing the calm meadow, live clock, and sign-up CTAs |
 | `/app` | Public | Focus workspace with Pomodoro clock, tasks, sounds, and stats. Signing in is optional and adds cloud sync |
 | `/focus`, `/planner` | Public | Workspace aliases |
+| `/stats` | Public | Focus history: 12-month heatmap, month calendar, and totals |
 | `/login` | Public | Dedicated sign-in page |
 | `/signup` | Public | Dedicated account creation page |
 
