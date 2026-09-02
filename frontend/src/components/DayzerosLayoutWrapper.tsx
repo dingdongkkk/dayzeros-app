@@ -15,6 +15,7 @@ function AppShell({ children }: { children: React.ReactNode }) {
     pathname.startsWith('/focus') ||
     pathname.startsWith('/planner') ||
     pathname.startsWith('/stats');
+  const isScrollable = pathname.startsWith('/stats');
   const { mounted, scene, days, toastMessage, toastVisible } = useDayzeros();
 
   if (!mounted) {
@@ -22,7 +23,11 @@ function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <main className={`relative min-h-screen w-full ${pathname.startsWith('/stats') ? 'overflow-y-auto' : 'overflow-hidden'}`}>
+    <main
+      className={`relative w-full ${
+        isScrollable ? 'h-screen overflow-y-auto' : 'min-h-screen overflow-hidden'
+      }`}
+    >
       {/* Background artwork and ambient lighting */}
       <BackgroundScene scene={scene} currentView={isApp ? 'focus' : 'landing'} />
 

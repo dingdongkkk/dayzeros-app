@@ -11,6 +11,11 @@ The frontend is a **Next.js 15 App Router** application built with React 19, Typ
    - Totals derived from the same day log: lifetime focus, current streak, longest streak, and best day.
    - Clicking any heatmap cell jumps the calendar to that month and selects the day.
 
+0a. **Day Timeline & Sharing**:
+   - `DayTimeline.tsx` draws a selected day across a 24-hour track from the per-session timestamps stored in `DayRecord.sessions`, reporting block count, first and last block, total, and peak hour.
+   - `ShareCard.tsx` renders a 1080×1080 PNG of a day over the meadow on a canvas — total, sessions, streak, peak, and the timeline strip — offered as **Save image** or **Copy** (via `ClipboardItem`). Fonts are awaited with `document.fonts.ready` so the canvas draws in Playfair rather than a fallback.
+   - Days logged before session tracking existed keep their total and say so explicitly instead of drawing an empty timeline.
+
 0b. **Fireflies (`Fireflies.tsx`)**:
    - One firefly per focus session banked in the trailing seven days, capped at 28, drifting over the landing page.
    - The scene fills with light as you work and empties as a streak lapses — a streak meter that is part of the artwork.

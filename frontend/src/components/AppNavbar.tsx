@@ -32,7 +32,7 @@ export function AppNavbar() {
   };
 
   return (
-    <nav className="absolute top-[22px] left-1/2 -translate-x-1/2 w-[min(72vw,880px)] max-[1080px]:w-[calc(100vw-28px)] max-[1080px]:fixed max-[1080px]:z-50 max-[1080px]:px-3 max-[1080px]:py-2 max-[1080px]:gap-2.5 flex items-center gap-[18px] bg-[var(--cream)] text-[var(--ink)] rounded-full py-[9px] pr-[10px] pl-[26px] shadow-[0_18px_40px_-18px_rgba(8,10,26,0.6)] z-30 transition-all">
+    <nav className="fixed top-[22px] left-1/2 -translate-x-1/2 w-[min(72vw,880px)] max-[1080px]:w-[calc(100vw-28px)] max-[1080px]:fixed max-[1080px]:z-50 max-[1080px]:px-3 max-[1080px]:py-2 max-[1080px]:gap-2.5 flex items-center gap-[18px] bg-[var(--cream)] text-[var(--ink)] rounded-full py-[9px] pr-[10px] pl-[26px] shadow-[0_18px_40px_-18px_rgba(8,10,26,0.6)] z-30 transition-all">
       {/* Brand */}
       <Link
         href="/"

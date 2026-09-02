@@ -103,7 +103,16 @@ export function DayzerosProvider({ children }: { children: React.ReactNode }) {
   const addFocusMinutes = useCallback((mins: number) => {
     setDays((prev) => {
       const k = dayKey();
-      const updated: DayRecords = { ...prev, [k]: { min: (prev[k]?.min ?? 0) + mins } };
+      const prior = prev[k];
+      // Stamp when the block ran so the day can be drawn on a timeline.
+      const session = { start: Date.now() - mins * 60_000, min: mins };
+      const updated: DayRecords = {
+        ...prev,
+        [k]: {
+          min: (prior?.min ?? 0) + mins,
+          sessions: [...(prior?.sessions ?? []), session],
+        },
+      };
       try {
         localStorage.setItem('dayzeros:days', JSON.stringify(updated));
       } catch {}

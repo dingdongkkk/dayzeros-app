@@ -4,6 +4,8 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { DayRecords } from '@/types';
 import { dayKey } from '@/hooks/useLocalStorage';
+import { DayTimeline } from '@/components/DayTimeline';
+import { ShareCard } from '@/components/ShareCard';
 
 /**
  * Focus history: a year heatmap, a month calendar, and the totals that
@@ -52,6 +54,7 @@ export function HistoryPanel({ days }: { days: DayRecords }) {
   const today = useMemo(() => new Date(), []);
   const [cursor, setCursor] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1));
   const [selected, setSelected] = useState<string | null>(null);
+  const [sharing, setSharing] = useState<string | null>(null);
 
   const minutesOn = (key: string) => days[key]?.min ?? 0;
 
@@ -167,12 +170,23 @@ export function HistoryPanel({ days }: { days: DayRecords }) {
               Every day you showed up.
             </h1>
           </div>
-          <Link
-            href="/app"
-            className="font-mono text-[11px] tracking-[1.5px] uppercase text-[var(--muted)] hover:text-[var(--ink)] no-underline transition-colors"
-          >
-            ← Back to focus
-          </Link>
+          <div className="flex items-center gap-3">
+            {minutesOn(todayStr) > 0 && (
+              <button
+                type="button"
+                onClick={() => setSharing(todayStr)}
+                className="font-mono text-[11px] tracking-[1.5px] uppercase bg-[var(--rust)] text-[var(--cream)] border-none rounded-full py-2 px-4 cursor-pointer hover:brightness-110 transition-all"
+              >
+                Share today
+              </button>
+            )}
+            <Link
+              href="/app"
+              className="font-mono text-[11px] tracking-[1.5px] uppercase text-[var(--muted)] hover:text-[var(--ink)] no-underline transition-colors"
+            >
+              ← Back to focus
+            </Link>
+          </div>
         </div>
 
         {/* Totals */}
@@ -342,27 +356,46 @@ export function HistoryPanel({ days }: { days: DayRecords }) {
             })}
           </div>
 
-          <div className="mt-5 min-h-[46px] font-mono text-[12px] text-[var(--muted)]">
+          <div className="mt-6 pt-6 border-t border-[#e2dccf]">
             {selected ? (
-              <span>
-                <span className="text-[var(--ink)]">
-                  {new Date(selected + 'T00:00:00').toDateString()}
-                </span>
-                {' — '}
-                {fmtMinutes(minutesOn(selected))}
-                {minutesOn(selected) > 0 && (
-                  <> · {Math.round(minutesOn(selected) / 25)} session
-                    {Math.round(minutesOn(selected) / 25) === 1 ? '' : 's'}</>
-                )}
-              </span>
+              <>
+                <div className="flex items-baseline justify-between gap-3 flex-wrap">
+                  <h3 className="font-serif text-[20px] m-0">
+                    {new Date(selected + 'T00:00:00').toLocaleDateString(undefined, {
+                      weekday: 'long',
+                      day: 'numeric',
+                      month: 'long',
+                    })}
+                  </h3>
+                  {minutesOn(selected) > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setSharing(selected)}
+                      className="font-mono text-[11px] tracking-[1.5px] uppercase bg-[var(--ink)] text-[var(--cream)] border-none rounded-full py-2 px-4 cursor-pointer hover:brightness-110 transition-all"
+                    >
+                      Share this day →
+                    </button>
+                  )}
+                </div>
+                <DayTimeline record={days[selected]} dateKey={selected} />
+              </>
             ) : (
-              <span className="italic font-serif text-[13px]">
-                Pick a day to see what it held.
-              </span>
+              <p className="italic font-serif text-[13px] text-[var(--muted)] m-0">
+                Pick a day to see when you focused.
+              </p>
             )}
           </div>
         </section>
       </div>
+
+      {sharing && (
+        <ShareCard
+          dateKey={sharing}
+          record={days[sharing]}
+          streak={totals.current}
+          onClose={() => setSharing(null)}
+        />
+      )}
     </div>
   );
 }
