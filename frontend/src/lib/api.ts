@@ -29,6 +29,10 @@ export interface BackendTask {
   done: boolean;
 }
 
+export interface BackendHistory {
+  days: Record<string, { min: number }>;
+}
+
 export interface BackendStats {
   todayMinutes: number;
   streak: number;
@@ -37,6 +41,15 @@ export interface BackendStats {
 }
 
 export const api = {
+  // Stats history for heatmap and calendar
+  async getHistory(from?: string, to?: string): Promise<BackendHistory> {
+    const qs = new URLSearchParams();
+    if (from) qs.set('from', from);
+    if (to) qs.set('to', to);
+    const suffix = qs.toString() ? `?${qs.toString()}` : '';
+    return fetchWithCredentials(`/api/stats/history${suffix}`);
+  },
+
   // Tasks API
   async getTasks(): Promise<BackendTask[]> {
     return fetchWithCredentials('/api/tasks');

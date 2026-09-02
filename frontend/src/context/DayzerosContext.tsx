@@ -1,7 +1,8 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
-import { Scene, TimerMode, Task, SoundVolumes, SoundType } from '@/types';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { Scene, TimerMode, Task, SoundVolumes, SoundType, DayRecords } from '@/types';
+import { dayKey } from '@/hooks/useLocalStorage';
 import { useAudioAmbience } from '@/hooks/useAudioAmbience';
 import { usePomodoro } from '@/hooks/usePomodoro';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
@@ -32,6 +33,7 @@ interface DayzerosContextType {
   deleteTask: (index: number) => Promise<void>;
   streak: number;
   todayMinutes: number;
+  days: DayRecords;
   // Ambience
   volumes: SoundVolumes;
   handleVolumeChange: (sound: SoundType, val: number) => void;
@@ -74,8 +76,7 @@ export function DayzerosProvider({ children }: { children: React.ReactNode }) {
     { t: 'Book dentist', done: false },
   ]);
   const [taskIds, setTaskIds] = useState<string[]>([]);
-  const [todayMinutes, setTodayMinutes] = useState(192);
-  const [streak, setStreak] = useState(12);
+  const [days, setDays] = useState<DayRecords>({});
   const [scene, setSceneState] = useState<Scene>('dusk');
   const [volumes, setVolumes] = useState<SoundVolumes>({ rain: 78, crickets: 62, wind: 0 });
 
@@ -83,6 +84,32 @@ export function DayzerosProvider({ children }: { children: React.ReactNode }) {
   const [focusInputSignal, setFocusInputSignal] = useState(0);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [toastVisible, setToastVisible] = useState(false);
+
+  const todayMinutes = useMemo(() => days[dayKey()]?.min ?? 0, [days]);
+
+  const streak = useMemo(() => {
+    const live = (k: string) => (days[k]?.min ?? 0) > 0;
+    let n = 0;
+    const d = new Date();
+    if (!live(dayKey(d))) d.setDate(d.getDate() - 1);
+    while (live(dayKey(d))) {
+      n++;
+      d.setDate(d.getDate() - 1);
+    }
+    return n;
+  }, [days]);
+
+  /** Record focus minutes against today, locally and (if signed in) in the cloud. */
+  const addFocusMinutes = useCallback((mins: number) => {
+    setDays((prev) => {
+      const k = dayKey();
+      const updated: DayRecords = { ...prev, [k]: { min: (prev[k]?.min ?? 0) + mins } };
+      try {
+        localStorage.setItem('dayzeros:days', JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+  }, []);
 
   const isAuthenticated = !!sessionData?.user;
   const userName = sessionData?.user?.name || 'Focus Wanderer';
@@ -94,8 +121,43 @@ export function DayzerosProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
+    try {
+      const storedTasks = localStorage.getItem('dayzeros:tasks');
+      if (storedTasks) setTasks(JSON.parse(storedTasks));
+
+      const storedDays = localStorage.getItem('dayzeros:days');
+      if (storedDays) {
+        setDays(JSON.parse(storedDays));
+      } else {
+        // First run: seed a little history so the heatmap isn't a blank grid.
+        const seeded: DayRecords = {};
+        const d = new Date();
+        for (let i = 0; i < 12; i++) {
+          seeded[dayKey(d)] = { min: 192 };
+          d.setDate(d.getDate() - 1);
+        }
+        setDays(seeded);
+        localStorage.setItem('dayzeros:days', JSON.stringify(seeded));
+      }
+
+      const storedScene = localStorage.getItem('dayzeros:scene') as Scene | null;
+      if (storedScene && SCENES.includes(storedScene)) setSceneState(storedScene);
+
+      const vol = (k: SoundType, fallback: number) => {
+        const v = localStorage.getItem('dayzeros:vol:' + k);
+        return v !== null ? Number(v) : fallback;
+      };
+      setVolumes({ rain: vol('rain', 78), crickets: vol('crickets', 62), wind: vol('wind', 0) });
+    } catch {}
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+    try {
+      localStorage.setItem('dayzeros:tasks', JSON.stringify(tasks));
+    } catch {}
+  }, [tasks, mounted]);
 
   useEffect(() => {
     if (!toastVisible) return;
@@ -113,9 +175,10 @@ export function DayzerosProvider({ children }: { children: React.ReactNode }) {
 
     async function loadCloudData() {
       try {
-        const [cloudTasks, cloudStats] = await Promise.all([
+        const [cloudTasks, cloudStats, cloudHistory] = await Promise.all([
           api.getTasks().catch(() => null),
           api.getStats().catch(() => null),
+          api.getHistory().catch(() => null),
         ]);
 
         if (!isSubscribed) return;
@@ -125,9 +188,13 @@ export function DayzerosProvider({ children }: { children: React.ReactNode }) {
           setTaskIds(cloudTasks.map((t: BackendTask) => t.id));
         }
 
+        if (cloudHistory?.days) {
+          setDays(cloudHistory.days);
+        } else if (cloudStats) {
+          setDays((prev) => ({ ...prev, [dayKey()]: { min: cloudStats.todayMinutes } }));
+        }
+
         if (cloudStats) {
-          setTodayMinutes(cloudStats.todayMinutes);
-          setStreak(cloudStats.streak);
           if (cloudStats.scene) setSceneState(cloudStats.scene);
           if (cloudStats.volumes) setVolumes(cloudStats.volumes);
         }
@@ -194,6 +261,9 @@ export function DayzerosProvider({ children }: { children: React.ReactNode }) {
   };
 
   const handleSetVolume = (sound: SoundType, val: number) => {
+    try {
+      localStorage.setItem('dayzeros:vol:' + sound, String(val));
+    } catch {}
     setVolumes((prev) => {
       const updated = { ...prev, [sound]: val };
       if (isAuthenticated) {
@@ -207,6 +277,9 @@ export function DayzerosProvider({ children }: { children: React.ReactNode }) {
 
   const setScene = (newScene: Scene) => {
     setSceneState(newScene);
+    try {
+      localStorage.setItem('dayzeros:scene', newScene);
+    } catch {}
     if (isAuthenticated) {
       api.saveSettings({ scene: newScene }).catch(() => {});
     }
@@ -225,7 +298,7 @@ export function DayzerosProvider({ children }: { children: React.ReactNode }) {
     async (finishedMode: TimerMode) => {
       playChime();
       if (finishedMode === 'focus') {
-        setTodayMinutes((m) => m + 25);
+        addFocusMinutes(25);
         if (isAuthenticated) {
           api.bankSession(25).catch(() => {});
         }
@@ -234,7 +307,7 @@ export function DayzerosProvider({ children }: { children: React.ReactNode }) {
         showToast('Break over — ready when you are');
       }
     },
-    [playChime, showToast, isAuthenticated]
+    [playChime, showToast, isAuthenticated, addFocusMinutes]
   );
 
   const {
@@ -247,7 +320,7 @@ export function DayzerosProvider({ children }: { children: React.ReactNode }) {
     toggleBreak,
   } = usePomodoro({
     onSessionComplete: (mins) => {
-      setTodayMinutes((m) => m + mins);
+      addFocusMinutes(mins);
       if (isAuthenticated) {
         api.bankSession(mins).catch(() => {});
       }
@@ -338,6 +411,7 @@ export function DayzerosProvider({ children }: { children: React.ReactNode }) {
         deleteTask,
         streak,
         todayMinutes,
+        days,
         volumes,
         handleVolumeChange,
         playingAudio,

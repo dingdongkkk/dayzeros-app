@@ -104,6 +104,35 @@ export async function statsRoutes(fastify: FastifyInstance) {
     };
   });
 
+  // GET /api/stats/history - Full per-day focus log for heatmaps and the calendar
+  fastify.get('/api/stats/history', async (request, reply) => {
+    const user = await requireAuth(request, reply);
+    if (!user) return;
+
+    const { from, to } = request.query as { from?: string; to?: string };
+
+    const logs = await db
+      .select()
+      .from(schema.focusLogs)
+      .where(eq(schema.focusLogs.userId, user.id))
+      .orderBy(desc(schema.focusLogs.dateKey));
+
+    // Range filtering is done in memory: dateKey is a zero-padded
+    // 'YYYY-MM-DD' string, so lexicographic order matches chronological order.
+    const filtered = logs.filter((l) => {
+      if (from && l.dateKey < from) return false;
+      if (to && l.dateKey > to) return false;
+      return true;
+    });
+
+    const days: Record<string, { min: number }> = {};
+    filtered.forEach((l) => {
+      days[l.dateKey] = { min: l.minutes };
+    });
+
+    return { days };
+  });
+
   // POST /api/stats/session - Bank focus minutes for completed session
   fastify.post('/api/stats/session', async (request, reply) => {
     const user = await requireAuth(request, reply);

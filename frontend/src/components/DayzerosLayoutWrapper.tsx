@@ -3,23 +3,31 @@
 import { usePathname } from 'next/navigation';
 import { DayzerosProvider, useDayzeros } from '@/context/DayzerosContext';
 import { BackgroundScene } from '@/components/BackgroundScene';
+import { Fireflies } from '@/components/Fireflies';
 import { LandingNavbar } from '@/components/LandingNavbar';
 import { AppNavbar } from '@/components/AppNavbar';
 import { Toast } from '@/components/Toast';
 
 function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isApp = pathname.startsWith('/app') || pathname.startsWith('/focus') || pathname.startsWith('/planner');
-  const { mounted, scene, toastMessage, toastVisible } = useDayzeros();
+  const isApp =
+    pathname.startsWith('/app') ||
+    pathname.startsWith('/focus') ||
+    pathname.startsWith('/planner') ||
+    pathname.startsWith('/stats');
+  const { mounted, scene, days, toastMessage, toastVisible } = useDayzeros();
 
   if (!mounted) {
     return <div className="fixed inset-0 bg-[#12132a]" />;
   }
 
   return (
-    <main className="relative min-h-screen w-full overflow-hidden">
+    <main className={`relative min-h-screen w-full ${pathname.startsWith('/stats') ? 'overflow-y-auto' : 'overflow-hidden'}`}>
       {/* Background artwork and ambient lighting */}
       <BackgroundScene scene={scene} currentView={isApp ? 'focus' : 'landing'} />
+
+      {/* One firefly per session banked this week — the streak, as light */}
+      {!isApp && <Fireflies days={days} />}
 
       {/* Distinct navbar: LandingNavbar for landing page (/), AppNavbar for app (/app) */}
       {isApp ? <AppNavbar /> : <LandingNavbar />}

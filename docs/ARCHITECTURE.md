@@ -36,6 +36,18 @@ graph TD
 
 ---
 
+### 3. `desktop/` (Electron overlay)
+- A menu bar application that floats the timer above every other app, including
+  full-screen ones (`setAlwaysOnTop(true, 'screen-saver')` plus
+  `setVisibleOnAllWorkspaces` with `visibleOnFullScreen`).
+- The countdown lives in the **main process** and is broadcast over IPC, so the tray
+  title, the meadow orb, and the panel all read one authoritative clock.
+- The timer counts against a wall-clock deadline rather than accumulating interval
+  ticks, so it survives display sleep and timer throttling.
+- Two renderers: a 132px transparent orb whose brightness tracks session progress
+  (dusk at the start, night at the end), and a popover panel with the transport.
+- The Dock icon is hidden; the tray is the application.
+
 ## Directory Structure
 
 ```

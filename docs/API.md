@@ -82,7 +82,26 @@ All stats endpoints require an authenticated session.
   ```
 - **Response** `200 OK`: `{ "success": true }`
 
-### 3. Update Settings
+### 3. Get Focus History
+
+`GET /api/stats/history?from=YYYY-MM-DD&to=YYYY-MM-DD`
+
+Returns the full per-day focus log, used by the heatmap and calendar on `/stats`.
+Both query parameters are optional; omitting them returns every logged day.
+
+```json
+{
+  "days": {
+    "2026-09-01": { "min": 192 },
+    "2026-08-31": { "min": 150 }
+  }
+}
+```
+
+Because `date_key` is a zero-padded `YYYY-MM-DD` string, lexicographic comparison
+matches chronological order, so range filtering needs no date parsing.
+
+### 4. Update Settings
 - **Route**: `PUT /api/stats/settings`
 - **Body**:
   ```json
