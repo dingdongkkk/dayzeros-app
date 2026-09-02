@@ -15,8 +15,18 @@ export interface SoundVolumes {
   wind: number;
 }
 
+/** One completed focus block, kept so the day can be drawn on a timeline. */
+export interface FocusSession {
+  /** Epoch ms at which the block started. */
+  start: number;
+  /** Length of the block in minutes. */
+  min: number;
+}
+
 export interface DayRecord {
   min: number;
+  /** Absent on days logged before session tracking existed. */
+  sessions?: FocusSession[];
 }
 
 export interface DayRecords {
