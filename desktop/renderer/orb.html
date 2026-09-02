@@ -1,0 +1,70 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Dayzeros orb</title>
+<style>
+  html,body{margin:0;height:100%;background:transparent;overflow:hidden;
+    -webkit-user-select:none;user-select:none;cursor:pointer}
+  #orb{
+    position:absolute;inset:6px;border-radius:50%;overflow:hidden;
+    box-shadow:0 10px 26px -8px rgba(6,9,26,.65), inset 0 0 0 1.5px rgba(247,245,241,.5);
+    -webkit-app-region:drag;
+  }
+  #orb img{
+    width:100%;height:100%;object-fit:cover;display:block;
+    image-rendering:pixelated;
+    /* Light level tracks session progress: dusk at the start, night at the end */
+    filter:brightness(var(--b,1)) saturate(var(--s,1));
+    transition:filter .9s ease;
+  }
+  /* Sky wash deepens as the session runs down */
+  #grade{position:absolute;inset:0;pointer-events:none;
+    background:rgba(20,30,90,var(--g,0));transition:background .9s ease}
+  #ring{position:absolute;inset:0;pointer-events:none}
+  #ring circle{fill:none;stroke-width:3;transform:rotate(-90deg);transform-origin:50% 50%}
+  .track{stroke:rgba(247,245,241,.18)}
+  .prog{stroke:#ffcf8f;stroke-linecap:round;transition:stroke-dashoffset .4s linear}
+  body.break .prog{stroke:#c9bfe8}
+  #hit{position:absolute;inset:0;-webkit-app-region:no-drag}
+</style>
+
+<div id="orb">
+  <img id="img" alt="">
+  <div id="grade"></div>
+</div>
+<svg id="ring" viewBox="0 0 132 132"><circle class="track" cx="66" cy="66" r="61"/><circle class="prog" cx="66" cy="66" r="61"/></svg>
+<div id="hit"></div>
+
+<script>
+  const params = new URLSearchParams(location.search);
+  const img = document.getElementById('img');
+  const src = params.get('img');
+  if (src) img.src = 'file://' + src;
+
+  const prog = document.querySelector('.prog');
+  const C = 2 * Math.PI * 61;
+  prog.style.strokeDasharray = C;
+  prog.style.strokeDashoffset = C;
+
+  function render(s) {
+    document.body.classList.toggle('break', s.mode === 'break');
+    prog.style.strokeDashoffset = C * (1 - s.progress);
+    // Dusk → night across the session; breaks sit brighter, like dawn.
+    const t = s.mode === 'focus' ? s.progress : 0;
+    document.documentElement.style.setProperty('--b', String(1 - 0.32 * t));
+    document.documentElement.style.setProperty('--s', String(1 - 0.18 * t));
+    document.documentElement.style.setProperty('--g', String(0.42 * t));
+  }
+
+  // A click opens the panel; a drag moves the window (handled by app-region).
+  let downAt = 0, downPos = [0, 0];
+  document.getElementById('hit').addEventListener('mousedown', (e) => {
+    downAt = Date.now(); downPos = [e.screenX, e.screenY];
+  });
+  document.getElementById('hit').addEventListener('mouseup', (e) => {
+    const moved = Math.hypot(e.screenX - downPos[0], e.screenY - downPos[1]);
+    if (Date.now() - downAt < 400 && moved < 4) window.dayzeros.orbClicked();
+  });
+
+  window.dayzeros.onState(render);
+  window.dayzeros.get().then(render);
+</script>

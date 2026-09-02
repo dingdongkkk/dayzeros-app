@@ -4,7 +4,8 @@
   "private": true,
   "workspaces": [
     "frontend",
-    "backend"
+    "backend",
+    "desktop"
   ],
   "scripts": {
     "dev": "bun run --cwd backend dev & bun run --cwd frontend dev",
@@ -14,6 +15,8 @@
     "build:frontend": "bun run --cwd frontend build",
     "build:backend": "bun run --cwd backend build",
     "db:push": "bun run --cwd backend db:push",
-    "db:generate": "bun run --cwd backend db:generate"
+    "db:generate": "bun run --cwd backend db:generate",
+    "dev:desktop": "bun run --cwd desktop dev",
+    "build:desktop": "bun run --cwd desktop build"
   }
 }
